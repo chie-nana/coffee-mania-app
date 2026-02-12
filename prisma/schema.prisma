@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+
+
+// ユーザー情報テーブル
+model User {
+  id          Int     @id @default(autoincrement())
+  supabaseId  String  @unique   // supabase上のID
+  userName    String          // アプリ上で表示する名前
+  // リレーション
+  posts       Post[]
+}
+
+// Post_記録タイプ選択
+enum RecordType {
+  SIMPLE
+  DETAIL
+}
+
+// Post_焙煎レベル選択
+enum RoastLevel {
+  LIGHT
+  MEDIUM
+  DARK
+}
+
+// 記録テーブル
+model Post {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  drinkAt         DateTime?  // 飲んだ日（null許可にしておく）
+  title           String
+  recordType      RecordType
+  roastLevel      RoastLevel?
+  farm            String?
+  processing      String?
+  grind           String?
+  brewMethod      String?
+  brewTool        String?
+  waterTemperature Int?      // 抽出時のお湯の温度
+  bitterTaste     Int?       // 苦味 1〜5想定
+  bodyTaste       Int?       // ボディ 1〜5想定
+  acidityTaste    Int?       // 酸味 1〜5想定
+  rating          Int?       // 総合評価 1〜5想定
+  drinkTime       String?    // 飲んだ時間帯
+  pairing         String?    // 一緒に食べたもの
+  drinkPlace      String?    // 飲んだ場所
+  shopName        String?    // お店の名前
+  price           Int?       // 価格（円）
+  memo            String?    // メモ
+  createdAt       DateTime   @default(now())
+
+  // リレーション
+  user           User      @relation(fields: [userId], references: [id])
+  images         PostImage[]
+  postCountries  PostCountry[]
+  postFlavors    PostFlavor[]
+}
+
+
+// 記事に紐づく画像
+model PostImage {
+  id           Int    @id @default(autoincrement())
+  postId       Int
+  imageUrl     String
+  displayOrder Int
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+// 記事と国をつなぐ中間テーブル
+model PostCountry {
+  id         Int  @id @default(autoincrement())
+  postId     Int
+  countryId  Int
+  post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  country Country @relation(fields: [countryId], references: [id])
+}
+
+// 国マスタ
+model Country {
+  id       Int    @id @default(autoincrement())
+  regionId Int
+  name     String @unique
+  region       Region       @relation(fields: [regionId], references: [id])
+  postCountries PostCountry[]
+}
+
+// 地域マスタ
+model Region {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  countries Country[]
+}
+
+//フレーバーの記録を選択式に
+enum FlavorTiming {
+  HOT
+  WARM
+  COOL
+}
+
+
+// 記録とフレーバーを１対多で紐付ける中間テーブル
+model PostFlavor {
+  id        Int   @id @default(autoincrement())
+  postId    Int
+  flavorId  Int
+  strength  Int    // 強さ 0〜3など
+  timing    FlavorTiming
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  flavor Flavor @relation(fields: [flavorId], references: [id])
+}
+
+
+// フレーバーマスタ
+model Flavor {
+  id               Int    @id @default(autoincrement())
+  flavorCategoryId Int
+  name             String   // 例: チョコレート、ベリー
+  category    FlavorCategory @relation(fields: [flavorCategoryId], references: [id])
+  postFlavors PostFlavor[]
+}
+
+// フレーバー親カテゴリ
+model FlavorCategory {
+  id    Int    @id @default(autoincrement())
+  name  String   // 例: フルーティー系、ナッツ系
+  flavors Flavor[]
+}

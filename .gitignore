@@ -34,3 +34,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# env (Prisma/Supabase含む)
+.env
+.env.*
+!.env.example
+
+
+dev.db
+
+# prisma generated (your actual output path)
+src/app/generated/prisma/
