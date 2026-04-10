@@ -26,7 +26,10 @@ export async function GET() {
     // レスポンスを返す
     return NextResponse.json<RegionsIndexResponse>({ regions }, { status: 200 })
   } catch (error) {
-    if (error instanceof Error)
-      return NextResponse.json({ message: error.message }, { status: 400 })
+    console.error(error);
+    return NextResponse.json(
+      { message: "地域一覧の取得に失敗しました" },
+      { status: 500 }
+    );
   }
 }
