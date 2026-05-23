@@ -1,30 +1,31 @@
-// 1) NextResponse を使う（JSONを返すため）
- // 2) prisma を読み込む（さっきの入口ファイル）
-// 3) GET関数を書く（Next.jsの決まり）
-// TODO: Region一覧をDBから取ってくる
-// TODO: JSONで返す
-
-import { NextResponse } from "next/server";
 import { prisma } from "@/app/_libs/prisma";
+import { supabase } from "@/app/_libs/supabase";
+import { NextRequest, NextResponse } from "next/server";
 
 // 地域一覧APIのレスポンスの型
 export type RegionsIndexResponse = {
   regions: {
-    id: number
-    name: string
-  }[]
-}
+    id: number;
+    name: string;
+  }[];
+};
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const token = request.headers.get("Authorization") ?? "";
+  const { error } = await supabase.auth.getUser(token);
+
+  if (error) {
+    return NextResponse.json({ status: error.message }, { status: 400 });
+  }
+
   try {
-    // 地域一覧をDBから取得
     const regions = await prisma.region.findMany({
       orderBy: {
-        id: 'asc'
+        id: "asc",
       },
     });
-    // レスポンスを返す
-    return NextResponse.json<RegionsIndexResponse>({ regions }, { status: 200 })
+
+    return NextResponse.json<RegionsIndexResponse>({ regions }, { status: 200 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
