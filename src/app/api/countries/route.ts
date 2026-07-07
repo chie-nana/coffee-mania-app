@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         id: "asc",
       },
     });
-    return NextResponse.json({ countries }, { status: 200 });
+    return NextResponse.json<CountriesIndexResponse>({ countries }, { status: 200 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
