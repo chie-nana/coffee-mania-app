@@ -3,8 +3,8 @@ import { supabase } from "@/app/_libs/supabase";
 import { NextRequest, NextResponse } from "next/server";
 
 type CreatePostRequestBody = {
-  title?: string;
-  recordType?: "SIMPLE" | "DETAIL";
+  title: string;
+  recordType: "SIMPLE" | "DETAIL";
   memo?: string;
 };
 
