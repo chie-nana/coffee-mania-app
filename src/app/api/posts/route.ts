@@ -8,6 +8,16 @@ type CreatePostRequestBody = {
   memo?: string;
 };
 
+type GetPostsResponse = {
+  posts: {
+    id: number;
+    title: string;
+    recordType: "SIMPLE" | "DETAIL";
+    memo: string | null;
+    createdAt: string;
+  }[];
+};
+
 export async function POST(request: NextRequest) {
   const token = request.headers.get("Authorization") ?? "";
   const { data, error } = await supabase.auth.getUser(token);
@@ -56,4 +66,49 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ post }, { status: 201 });
+}
+
+export async function GET(request: NextRequest) {
+  const token = request.headers.get("Authorization") ?? "";
+  const { data, error } = await supabase.auth.getUser(token);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+  const user = await prisma.user.findUnique({
+    where: {
+      supabaseId: data.user.id,
+    },
+  });
+  if (!user) {
+    return NextResponse.json(
+      { message: "ユーザーが見つかりません" },
+      { status: 404 }
+    );
+  }
+
+  const posts = await prisma.post.findMany({
+    where: {
+      userId: user.id,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: {
+      id: true,
+      title: true,
+      recordType: true,
+      memo: true,
+      createdAt: true,
+    },
+  });
+  const responsePosts = posts.map((post) => ({
+    ...post,
+    createdAt: post.createdAt.toISOString(),
+  }));
+
+  return NextResponse.json<GetPostsResponse>(
+    { posts: responsePosts },
+    { status: 200 }
+  );
 }
